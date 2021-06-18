@@ -1,0 +1,96 @@
+import keras
+import pickle
+import numpy as np
+from keras import layers
+from keras.callbacks import TensorBoard
+from tkinter import filedialog as fd
+
+
+class UnetSegmentationModel(object):
+
+    def __init__(self):
+        self.X = None
+        self.y = None
+        self.model = None
+        self.max_width = 256
+        self.max_height = 256
+
+    def load_data(self, X_path, y_path):
+        if X_path is None:
+            X_path = fd.askopenfilename()
+        self.X = np.array(pickle.load(open(X_path, "rb"))).reshape(-1, 256, 256, 1)
+
+        if y_path is None:
+            y_path = fd.askopenfilename()
+        self.y = np.array(pickle.load(open(y_path, "rb"))).reshape(-1, 256, 256, 1)
+
+    def create_model(self):
+        inputs = layers.Input((256, 256, 1))
+
+        x = layers.Conv2D(32, (3, 3), strides=2, padding='same', input_shape=(256, 256, 1))(inputs)
+        x = layers.BatchNormalization()(x)
+        x = layers.Activation("relu")(x)
+
+        previous_block_activation = x
+
+        for filters in [64, 128, 256]:
+            x = layers.Activation("relu")(x)
+            x = layers.SeparableConv2D(filters, (3, 3), padding="same")(x)
+            x = layers.BatchNormalization()(x)
+
+            x = layers.Activation("relu")(x)
+            x = layers.SeparableConv2D(filters, (3, 3), padding="same")(x)
+            x = layers.BatchNormalization()(x)
+
+            x = layers.MaxPooling2D(3, strides=2, padding="same")(x)
+
+            # Project residual
+            residual = layers.Conv2D(filters, 1, strides=2, padding="same")(
+                previous_block_activation
+            )
+            x = layers.add([x, residual])  # Add back residual
+            previous_block_activation = x  # Set aside next residual
+
+        for filters in [256, 128, 64, 32]:
+            x = layers.Activation("relu")(x)
+            x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
+            x = layers.BatchNormalization()(x)
+
+            x = layers.Activation("relu")(x)
+            x = layers.Conv2DTranspose(filters, 3, padding="same")(x)
+            x = layers.BatchNormalization()(x)
+
+            x = layers.UpSampling2D(2)(x)
+
+            # Project residual
+            residual = layers.UpSampling2D(2)(previous_block_activation)
+            residual = layers.Conv2D(filters, 1, padding="same")(residual)
+            x = layers.add([x, residual])  # Add back residual
+            previous_block_activation = x  # Set aside next residual
+
+        # Add a per-pixel classification layer
+        outputs = layers.Conv2D(2, 3, activation="softmax", padding="same")(x)
+
+        # Define the model
+        model = keras.Model(inputs, outputs)
+        model.summary()
+        self.model = model
+
+    def compile_model(self):
+        self.model.compile(loss='sparse_categorical_crossentropy',
+                           optimizer='rmsprop')
+
+    def train_model(self, model_path, val_split=0.3, n_epochs=100, n_batch_size=10):
+        tbCallBack = TensorBoard(log_dir="./Graph", histogram_freq=0,
+                                 write_graph=True, write_images=True)
+        self.model.fit(self.X, self.y, validation_split=val_split,
+                       epochs=n_epochs, batch_size=n_batch_size,
+                       verbose=1,
+                       callbacks=[tbCallBack, keras.callbacks.ModelCheckpoint(model_path, save_best_only=True)])
+
+    def run_network(self, x_path=None, y_path=None, model_path=None):
+        self.load_data(x_path, y_path)
+        self.create_model()
+        self.compile_model()
+        self.train_model(model_path)
+
