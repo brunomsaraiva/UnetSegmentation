@@ -15,11 +15,8 @@ class UnetSegmentationClassifier(object):
 
     def create_mask(self, img):
         img = img_as_float(rescale_intensity(np.array([img.reshape(256, 256, 1)])))
-        print(img.shape)
 
-        mask = self.model.predict(img)[0]
-        mask = keras.preprocessing.image.array_to_img(mask)
-        print(mask.shape)
+        mask = self.model.predict(img)[0] >= 0.5
 
-        return mask[0]
+        return mask[:, :, 1]
 

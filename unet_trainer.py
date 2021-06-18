@@ -2,7 +2,7 @@ import keras
 import pickle
 import numpy as np
 from keras import layers
-from keras.callbacks import TensorBoard
+from keras.callbacks import TensorBoard, EarlyStopping
 from tkinter import filedialog as fd
 
 
@@ -78,15 +78,18 @@ class UnetSegmentationModel(object):
 
     def compile_model(self):
         self.model.compile(loss='sparse_categorical_crossentropy',
-                           optimizer='rmsprop')
+                           optimizer='adam')
 
-    def train_model(self, model_path, val_split=0.3, n_epochs=100, n_batch_size=10):
+    def train_model(self, model_path, val_split=0.2, n_epochs=500, n_batch_size=10):
         tbCallBack = TensorBoard(log_dir="./Graph", histogram_freq=0,
                                  write_graph=True, write_images=True)
+        checkpoint = keras.callbacks.ModelCheckpoint(model_path, save_best_only=True)
+        earlystopper = EarlyStopping(patience=50, verbose=1)
+
         self.model.fit(self.X, self.y, validation_split=val_split,
                        epochs=n_epochs, batch_size=n_batch_size,
                        verbose=1,
-                       callbacks=[tbCallBack, keras.callbacks.ModelCheckpoint(model_path, save_best_only=True)])
+                       callbacks=[tbCallBack, checkpoint, earlystopper])
 
     def run_network(self, x_path=None, y_path=None, model_path=None):
         self.load_data(x_path, y_path)
