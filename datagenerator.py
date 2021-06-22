@@ -29,8 +29,8 @@ class DataGenerator(object):
 
         for i in range(X.shape[0]):
             for angle in range(0, 360, angle_step):
-                rotated_X.append(rotate(X[i, :, :, 1], angle))
-                rotated_y.append(rotate(y[i, :, :, 1], angle))
+                rotated_X.append(rotate(X[i, :, :, 0], angle))
+                rotated_y.append(rotate(y[i, :, :, 0], angle))
 
         rotated_X = np.array(rotated_X).reshape(-1, 256, 256, 1)
         rotated_y = np.array(rotated_y).reshape(-1, 256, 256, 1)
@@ -43,8 +43,8 @@ class DataGenerator(object):
 
         for i in range(X.shape[0]):
             for sigma in range(0, 2, sigma_step):
-                blurred_X.append(rotate(X[i, :, :, 1], sigma))
-                blurred_y.append(rotate(y[i, :, :, 1], sigma))
+                blurred_X.append(rotate(X[i, :, :, 0], sigma))
+                blurred_y.append(rotate(y[i, :, :, 0], sigma))
 
         blurred_X = np.array(blurred_X).reshape(-1, 256, 256, 1)
         blurred_y = np.array(blurred_y).reshape(-1, 256, 256, 1)
