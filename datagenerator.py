@@ -42,7 +42,7 @@ class DataGenerator(object):
         blurred_y = []
 
         for i in range(X.shape[0]):
-            for sigma in range(0, 2, sigma_step):
+            for sigma in np.arange(0, 2, sigma_step):
                 blurred_X.append(rotate(X[i, :, :, 0], sigma))
                 blurred_y.append(rotate(y[i, :, :, 0], sigma))
 
