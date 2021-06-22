@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from keras import layers
 from keras.callbacks import TensorBoard, EarlyStopping
+from keras.preprocessing.image import ImageDataGenerator
 from tkinter import filedialog as fd
 
 
@@ -86,7 +87,24 @@ class UnetSegmentationModel(object):
         checkpoint = keras.callbacks.ModelCheckpoint(model_path, save_best_only=True)
         earlystopper = EarlyStopping(patience=50, verbose=1)
 
-        self.model.fit(self.X, self.y, validation_split=val_split,
+        data_gen_args = dict(rotation_range=0.2,
+                             width_shift_range=0.05,
+                             height_shift_range=0.05,
+                             shear_range=0.05,
+                             zoom_range=0.05,
+                             horizontal_flip=True,
+                             fill_mode='nearest')
+
+        image_datagen = ImageDataGenerator(**data_gen_args)
+        mask_datagen = ImageDataGenerator(**data_gen_args)
+
+        image_datagen.fit(self.X, augment=True, seed=1)
+        mask_datagen.fit(self.y, augment=True, seed=1)
+
+        image_generator = image_datagen.flow(self.X, save_to_dir="datagen\\X")
+        mask_generator = image_datagen.flow(self.y, save_to_dir="datagen\\y")
+
+        self.model.fit(image_generator, mask_generator, validation_split=val_split,
                        epochs=n_epochs, batch_size=n_batch_size,
                        verbose=1,
                        callbacks=[tbCallBack, checkpoint, earlystopper])
