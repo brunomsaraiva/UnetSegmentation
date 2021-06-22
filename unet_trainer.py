@@ -89,7 +89,7 @@ class UnetSegmentationModel(object):
         tbCallBack = TensorBoard(log_dir="./Graph", histogram_freq=0,
                                  write_graph=True, write_images=True)
         checkpoint = keras.callbacks.ModelCheckpoint(model_path, save_best_only=True)
-        earlystopper = EarlyStopping(patience=50, verbose=1)
+        earlystopper = EarlyStopping(patience=10, verbose=1)
 
         self.datagenerator.generate_data(self.X, self.y,
                                          val_split=val_split,
@@ -106,5 +106,7 @@ class UnetSegmentationModel(object):
         self.load_data(x_path, y_path)
         self.create_model()
         self.compile_model()
-        self.train_model(model_path)
+        self.train_model(model_path,
+                         val_split=0.2, rotation_angle_step=45, gaussian_sigma_step=0.4,
+                         n_epochs=500, n_batch_size=10)
 
