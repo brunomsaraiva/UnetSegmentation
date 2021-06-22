@@ -26,8 +26,6 @@ class UnetSegmentationModel(object):
             y_path = fd.askopenfilename()
         self.y = np.array(pickle.load(open(y_path, "rb"))).reshape(-1, 256, 256, 1)
 
-        self.datagenerator.generate_data(self.X, self.y, val_split=0.2, rotation_angle_step=30, gaussian_sigma_step=0.2)
-
     def create_model(self):
         inputs = layers.Input((256, 256, 1))
 
@@ -84,11 +82,19 @@ class UnetSegmentationModel(object):
         self.model.compile(loss='sparse_categorical_crossentropy',
                            optimizer='adam')
 
-    def train_model(self, model_path, val_split=0.2, n_epochs=500, n_batch_size=10):
+    def train_model(self, model_path,
+                    val_split=0.2, rotation_angle_step=30, gaussian_sigma_step=0.2,
+                    n_epochs=500, n_batch_size=10):
+
         tbCallBack = TensorBoard(log_dir="./Graph", histogram_freq=0,
                                  write_graph=True, write_images=True)
         checkpoint = keras.callbacks.ModelCheckpoint(model_path, save_best_only=True)
         earlystopper = EarlyStopping(patience=50, verbose=1)
+
+        self.datagenerator.generate_data(self.X, self.y,
+                                         val_split=val_split,
+                                         rotation_angle_step=rotation_angle_step,
+                                         gaussian_sigma_step=gaussian_sigma_step)
 
         self.model.fit(self.datagenerator.train_X, self.datagenerator.train_y,
                        validation_data=(self.datagenerator.val_X, self.datagenerator.val_y),
