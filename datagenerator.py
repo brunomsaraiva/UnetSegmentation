@@ -43,8 +43,8 @@ class DataGenerator(object):
 
         for i in range(X.shape[0]):
             for sigma in np.arange(0, 2, sigma_step):
-                blurred_X.append(rotate(X[i, :, :, 0], sigma))
-                blurred_y.append(rotate(y[i, :, :, 0], sigma))
+                blurred_X.append(gaussian(X[i, :, :, 0], sigma))
+                blurred_y.append(y[i, :, :, 0])
 
         blurred_X = np.array(blurred_X).reshape(-1, 256, 256, 1)
         blurred_y = np.array(blurred_y).reshape(-1, 256, 256, 1)
