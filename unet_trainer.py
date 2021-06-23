@@ -83,13 +83,13 @@ class UnetSegmentationModel(object):
                            optimizer='adam')
 
     def train_model(self, model_path,
-                    val_split=0.2, rotation_angle_step=30, gaussian_sigma_step=0.2,
-                    n_epochs=500, n_batch_size=10):
+                    val_split, rotation_angle_step, gaussian_sigma_step,
+                    n_epochs, n_batch_size):
 
         tbCallBack = TensorBoard(log_dir="./Graph", histogram_freq=0,
                                  write_graph=True, write_images=True)
-        checkpoint = keras.callbacks.ModelCheckpoint(model_path, save_best_only=True)
-        earlystopper = EarlyStopping(patience=10, verbose=1)
+        checkpoint = keras.callbacks.ModelCheckpoint(model_path, monitor="val_loss", save_best_only=True)
+        earlystopper = EarlyStopping(patience=20, monitor="val_loss", verbose=1)
 
         self.datagenerator.generate_data(self.X, self.y,
                                          val_split=val_split,
@@ -102,11 +102,12 @@ class UnetSegmentationModel(object):
                        verbose=1,
                        callbacks=[tbCallBack, checkpoint, earlystopper])
 
-    def run_network(self, x_path=None, y_path=None, model_path=None):
+    def run_network(self, x_path=None, y_path=None, model_path=None, val_split=0.2, rotation_angle_step=30, gaussian_sigma_step=0.2,
+                    n_epochs=500, n_batch_size=10):
         self.load_data(x_path, y_path)
         self.create_model()
         self.compile_model()
         self.train_model(model_path,
-                         val_split=0.2, rotation_angle_step=45, gaussian_sigma_step=0.4,
-                         n_epochs=500, n_batch_size=10)
+                         val_split, rotation_angle_step, gaussian_sigma_step,
+                         n_epochs, n_batch_size)
 
