@@ -12,7 +12,7 @@ X = []
 y = []
 
 for imgname in os.listdir(path + os.sep + "wf_bf"):
-    X_image = img_as_float(rescale_intensity(imread(path + os.sep + "wf_nr" + os.sep + imgname)))
+    X_image = img_as_float(rescale_intensity(imread(path + os.sep + "wf_bf" + os.sep + imgname)))
     X.append(X_image)
     #maskname = "mask_" + imgname.split("_")[1] + "_" + imgname.split("_")[2]
     #y_image = img_as_float(rgb2grey(imread(path + os.sep + "sim_masks" + os.sep + maskname)))
